@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+    <meta name="google-site-verification" content="dbpRlWl51QdblvvEt2BMI158MhSGU9gWjMB6IGa_vJM" />
+
+
+    <title>Map Covid 19 Indonesia</title>
+
+    <meta name="description" content="Web Profile">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500" rel="stylesheet">
+
+    <link href="/app.css?id=1" rel="stylesheet">
+    <script>
+        function makeRequest(method, url, data) {
+            return new Promise(
+                function (resolve, reject) {
+                    var http = new XMLHttpRequest();
+                    http.open(method, url);
+                    http.onload = function () {
+                        if (this.status >= 200 && this.status < 300) {
+                            var response = http.response;
+                            try {
+                                response = JSON.parse(response);
+                                resolve(response);
+                            } catch (error) {
+                                reject({
+                                    status: this.status,
+                                    statusText: error
+                                });
+                            }
+
+                        } else {
+                            reject({
+                                status: this.status,
+                                statusText: http.statusText
+                            });
+                        }
+                    };
+                    http.onerror = function () {
+                        reject({
+                            status: this.status,
+                            statusText: http.statusText
+                        });
+                    };
+
+                    if (method === 'POST') {
+                        data = data || {};
+                        http.send(JSON.stringify(data));
+                    } else http.send();
+                }
+            );
+        }
+
+        var map;
+        var BASE_URL = 'https://project-covid19-api.dev/';
+
+        var marker = {};
+        var infowindow = {};
+        var caseCircle = {};
+
+        function infoBox(controlDiv, map, kasusPositif, kasusSembuh, kasusMeninggal) {
+            // We set up a variable for this since we're adding event listeners
+            // later.
+            var control = this;
+
+            controlDiv.style.clear = 'both';
+
+            // Set CSS for the control border
+            var infoBoxPositif = document.createElement('div');
+            infoBoxPositif.id = 'infoBoxPositif';
+            infoBoxPositif.title = 'Jumlah kasus positif';
+            controlDiv.appendChild(infoBoxPositif);
+
+            // Set CSS for the control interior
+            var infoBoxPositifText = document.createElement('div');
+            infoBoxPositifText.id = 'infoBoxPositifText';
+            infoBoxPositifText.innerHTML = 'Positif: ' + kasusPositif;
+            infoBoxPositif.appendChild(infoBoxPositifText);
+
+            // Set CSS for the setCenter control border
+            var infoBoxSembuh = document.createElement('div');
+            infoBoxSembuh.id = 'infoBoxSembuh';
+            infoBoxSembuh.title = 'Jumlah kasus sembuh';
+            controlDiv.appendChild(infoBoxSembuh);
+
+            // Set CSS for the control interior
+            var infoBoxSembuhText = document.createElement('div');
+            infoBoxSembuhText.id = 'infoBoxSembuhText';
+            infoBoxSembuhText.innerHTML = 'Sembuh: ' + kasusSembuh;
+            infoBoxSembuh.appendChild(infoBoxSembuhText);
+
+            // Set CSS for the setCenter control border
+            var infoBoxMeninggal = document.createElement('div');
+            infoBoxMeninggal.id = 'infoBoxMeninggal';
+            infoBoxMeninggal.title = 'Jumlah kasus meninggal dunia';
+            controlDiv.appendChild(infoBoxMeninggal);
+
+            // Set CSS for the control interior
+            var infoBoxMeninggalText = document.createElement('div');
+            infoBoxMeninggalText.id = 'infoBoxMeninggalText';
+            infoBoxMeninggalText.innerHTML = 'Meninggal: ' + kasusMeninggal;
+            infoBoxMeninggal.appendChild(infoBoxMeninggalText);
+        }
+
+        function infoBoxData(controlDiv, map, last) {
+            var control = this;
+
+            controlDiv.style.clear = 'both';
+
+            // Set CSS for the control border
+            var infoBoxUpdate = document.createElement('div');
+            infoBoxUpdate.id = 'infoBoxUpdate';
+            infoBoxUpdate.title = 'Terakhir update';
+            controlDiv.appendChild(infoBoxUpdate);
+
+            // Set CSS for the control interior
+            var infoBoxUpdateText = document.createElement('div');
+            infoBoxUpdateText.id = 'infoBoxUpdateText';
+            infoBoxUpdateText.innerHTML = 'Terakhir Update: ' + last;
+            infoBoxUpdate.appendChild(infoBoxUpdateText);
+
+            // Set CSS for the setCenter control border
+            var infoBoxCreator = document.createElement('div');
+            infoBoxCreator.id = 'infoBoxCreator';
+            infoBoxCreator.title = 'Si pembuat';
+            controlDiv.appendChild(infoBoxCreator);
+
+            // Set CSS for the control interior
+            var infoBoxCreatorText = document.createElement('div');
+            infoBoxCreatorText.id = 'infoBoxCreatorText';
+            infoBoxCreatorText.innerHTML = 'Dibuat oleh Alfian Rikzandi';
+            infoBoxCreator.appendChild(infoBoxCreatorText);
+
+        }
+
+        
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 8,
+                center: {
+                    lat: -7.0191413,
+                    lng: 109.8701793
+                },
+                mapTypeId: 'roadmap',
+                disableDefaultUI: true,
+                zoomControl: true,
+                styles: [{
+                        "elementType": "geometry",
+                        "stylers": [{
+                            "color": "#212121"
+                        }]
+                    },
+                    {
+                        "elementType": "labels.icon",
+                        "stylers": [{
+                            "visibility": "off"
+                        }]
+                    },
+                    {
+                        "elementType": "labels.text.fill",
+                        "stylers": [{
+                            "color": "#757575"
+                        }]
+                    },
+                    {
+                        "elementType": "labels.text.stroke",
+                        "stylers": [{
+                            "color": "#212121"
+                        }]
+                    },
+                    {
+                        "featureType": "administrative",
+                        "elementType": "geometry",
+                        "stylers": [{
+                            "color": "#757575"
+                        }]
+                    },
+                    {
+                        "featureType": "administrative.country",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{
+                            "color": "#9e9e9e"
+                        }]
+                    },
+                    {
+                        "featureType": "administrative.land_parcel",
+                        "stylers": [{
+                            "visibility": "off"
+                        }]
+                    },
+                    {
+                        "featureType": "administrative.locality",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{
+                            "color": "#bdbdbd"
+                        }]
+                    },
+                    {
+                        "featureType": "poi",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{
+                            "color": "#757575"
+                        }]
+                    },
+                    {
+                        "featureType": "poi.park",
+                        "elementType": "geometry",
+                        "stylers": [{
+                            "color": "#181818"
+                        }]
+                    },
+                    {
+                        "featureType": "poi.park",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{
+                            "color": "#616161"
+                        }]
+                    },
+                    {
+                        "featureType": "poi.park",
+                        "elementType": "labels.text.stroke",
+                        "stylers": [{
+                            "color": "#1b1b1b"
+                        }]
+                    },
+                    {
+                        "featureType": "road",
+                        "elementType": "geometry.fill",
+                        "stylers": [{
+                            "color": "#2c2c2c"
+                        }]
+                    },
+                    {
+                        "featureType": "road",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{
+                            "color": "#8a8a8a"
+                        }]
+                    },
+                    {
+                        "featureType": "road.arterial",
+                        "elementType": "geometry",
+                        "stylers": [{
+                            "color": "#373737"
+                        }]
+                    },
+                    {
+                        "featureType": "road.highway",
+                        "elementType": "geometry",
+                        "stylers": [{
+                            "color": "#3c3c3c"
+                        }]
+                    },
+                    {
+                        "featureType": "road.highway.controlled_access",
+                        "elementType": "geometry",
+                        "stylers": [{
+                            "color": "#4e4e4e"
+                        }]
+                    },
+                    {
+                        "featureType": "road.local",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{
+                            "color": "#616161"
+                        }]
+                    },
+                    {
+                        "featureType": "transit",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{
+                            "color": "#757575"
+                        }]
+                    },
+                    {
+                        "featureType": "water",
+                        "elementType": "geometry",
+                        "stylers": [{
+                            "color": "#000000"
+                        }]
+                    },
+                    {
+                        "featureType": "water",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{
+                            "color": "#3d3d3d"
+                        }]
+                    }
+                ]
+            });
+            runData(99);
+            runData(1);
+        }
+
+        function runData(id) {
+            var url = '';
+            var strokeWarna = '';
+            var dataNilai = '';
+            if (id == 99) {
+                url = 'kasus';
+            } else if (id == 1) {
+                url = 'positif';
+                strokeWarna = '#f44336';
+                dataNilai = 'positif';
+            } else if (id == 2) {
+                url = 'sembuh';
+                strokeWarna = '#8BC34A';
+                dataNilai = 'sembuh';
+            } else if (id == 3) {
+                url = 'meninggal';
+                strokeWarna = '#d50000';
+                dataNilai = 'meninggal';
+            } else if (id == 4) {
+                url = 'odp';
+                strokeWarna = '#FF9800';
+                dataNilai = 'odp';
+            } else if (id == 5) {
+                url = 'pdp';
+                strokeWarna = '#FF5722';
+                dataNilai = 'pdp';
+            }
+            var getDataRequest = makeRequest('GET', BASE_URL + url).then(function (res) {
+                if (res.status) {
+                    if (id != 99) {
+                        for (const key in res.data) {
+                            if (res.data.hasOwnProperty(key)) {
+                                var element = res.data[key];
+
+                                infowindow[key] = new google.maps.InfoWindow({});
+                                marker[key] = new google.maps.Marker({
+                                    map: map
+                                });
+
+                                caseCircle[key] = new google.maps.Circle({
+                                    strokeColor: strokeWarna,
+                                    strokeOpacity: 0.8,
+                                    strokeWeight: 1,
+                                    fillColor: strokeWarna,
+                                    fillOpacity: 0.35,
+                                    map: map,
+                                    center: element.center,
+                                    radius: Math.sqrt(element[dataNilai]) * 1000,
+                                    title: element[dataNilai]
+                                });
+
+                                google.maps.event.addListener(caseCircle[key], 'mouseover', function () {
+                                    if (typeof this.title !== "undefined") {
+                                        marker[key].setPosition(this.getCenter());
+                                        infowindow[key].setContent("<b>" + key + ": " + this.title +
+                                            " kasus</b>");
+                                        infowindow[key].open(map, marker[key]);
+                                        marker[key].setVisible(false);
+                                    }
+                                });
+
+                                google.maps.event.addListener(caseCircle[key], 'mouseout', function () {
+                                    infowindow[key].close();
+                                });
+                            }
+                        }
+                    } else {
+                        var getResData = res.data;
+                        var centerControlDiv = document.createElement('div');
+                        var centerControl = new infoBox(centerControlDiv, map, getResData.positif, getResData.sembuh, getResData.meninggal);
+                        centerControlDiv.index = 1;
+                        centerControlDiv.style['padding-top'] = '10px';
+                        map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
+
+                        var bottomControlDiv = document.createElement('div');
+                        var bottomControl = new infoBoxData(bottomControlDiv, map, getResData.update);
+                        bottomControlDiv.index = 1;
+                        bottomControlDiv.style['padding-bottom'] = '10px';
+                        map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(bottomControlDiv);
+                    }
+                }
+            });
+        }
+
+        function resetData() {
+            for (const key in marker) {
+                if (marker.hasOwnProperty(key)) {
+                    var element = marker[key];
+                    element.setMap(null);
+                }
+            }
+            for (const key in caseCircle) {
+                if (caseCircle.hasOwnProperty(key)) {
+                    var element = caseCircle[key];
+                    element.setMap(null);
+                }
+            }
+        }
+
+        function gantiData(id) {
+            resetData();
+            runData(id);
+        }
+        document.onreadystatechange = window.handleState;
+    </script>
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD4Oy4O9ZcM_K_2f8Ib7TRgSNum6-mcQuI&callback=initMap&language=id&region=ID"
+        async defer></script>
+</head>
+
+<body>
+    <main class="area-peta-container flex">
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <a class="toolbar-link" href="javascript:;" onclick="gantiData(1)">
+                    <span class="text">POSITIF</span>
+                </a>
+                <a class="toolbar-link" href="javascript:;" onclick="gantiData(2)">
+                    <span class="text">SEMBUH</span>
+                </a>
+                <a class="toolbar-link" href="javascript:;" onclick="gantiData(3)">
+                    <span class="text">MENINGGAL</span>
+                </a>
+                <a class="toolbar-link" href="javascript:;" onclick="gantiData(4)">
+                    <span class="text">ODP</span>
+                </a>
+                <a class="toolbar-link" href="javascript:;" onclick="gantiData(5)">
+                    <span class="text">PDP</span>
+                </a>
+            </div>
+        </md-toolbar>
+        <div id="map"></div>
+    </main>
+</body>
+
+</html>

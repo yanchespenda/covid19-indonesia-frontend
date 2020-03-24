@@ -1,0 +1,127 @@
+html, 
+body {
+    /* height: 100%; */
+}
+
+body {
+    height: 100vh;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', 'Noto', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background: #f5f5f5;
+    position: relative;
+}
+
+.container {
+    margin: 0 auto;
+    max-width: 1280px;
+    width: 95%;
+}
+
+@media only screen and (min-width: 601px) {
+    .container {
+        width: 90%;
+    }
+}
+
+@media only screen and (min-width: 993px) {
+    .container {
+        width: 85%;
+    }
+}
+
+a {
+    color: #29b6f6;
+    text-decoration: none;
+    background-color: transparent;
+}
+
+md-toolbar {
+    background-color: #212121;
+    color: hsla(0,0%,100%,.87);
+}
+
+md-toolbar .md-toolbar-tools {
+    background-color: #212121;
+    font-size: 20px;
+    letter-spacing: .005em;
+    box-sizing: border-box;
+    font-weight: 400;
+    display: -webkit-box;
+    display: flex;
+    -webkit-box-align: center;
+    align-items: center;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    flex-direction: row;
+    width: 100%;
+    height: 64px;
+    max-height: 64px;
+    padding: 0 16px;
+    margin: 0;
+}
+
+md-toolbar .md-toolbar-tools a {
+    color: inherit;
+    text-decoration: none;
+}
+
+md-toolbar .md-toolbar-tools .toolbar-link {
+    display: block;
+
+    margin: 0 8px;
+}
+
+md-toolbar .md-toolbar-tools .toolbar-link span {
+    color: #fff;
+}
+
+.area-peta-container {
+    width: 100%;
+    height: 100%;
+}
+
+.area-peta-container #map {
+    min-height: calc(100% - 64px);
+}
+
+.flex, .flex-grow {
+    -webkit-box-flex: 1;
+    box-sizing: border-box;
+}
+
+.flex {
+    flex: 1;
+}
+
+#infoBoxPositif, #infoBoxSembuh, #infoBoxMeninggal, #infoBoxUpdate, #infoBoxCreator {
+    background-color: #fff;
+    border: 2px solid #fff;
+    border-radius: 3px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.3);
+    cursor: pointer;
+    float: left;
+    margin-bottom: 22px;
+    text-align: center;
+}
+
+#infoBoxPositifText, #infoBoxSembuhText, #infoBoxMeninggalText, #infoBoxUpdateText, #infoBoxCreatorText {
+    color: rgb(25,25,25);
+    font-family: Roboto,Arial,sans-serif;
+    font-size: 15px;
+    line-height: 25px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+#infoBoxSembuh {
+    margin: 0 12px;
+}
+
+#infoBoxCreator {
+    margin-left: 12px;
+}
