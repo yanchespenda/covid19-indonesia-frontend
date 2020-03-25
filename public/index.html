@@ -56,6 +56,7 @@
 
         var map;
         var BASE_URL = 'https://api.covid19.arproject.web.id/';
+        // var BASE_URL = 'https://project-covid19-api.dev/';
 
         var marker = {};
         var infowindow = {};
@@ -342,7 +343,7 @@
                                     fillOpacity: 0.35,
                                     map: map,
                                     center: element.center,
-                                    radius: Math.sqrt(element[dataNilai]) * 1000,
+                                    radius: Math.sqrt(element[dataNilai]) * element.radius,
                                     title: element[dataNilai]
                                 });
 
