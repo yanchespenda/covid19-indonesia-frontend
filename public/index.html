@@ -12,7 +12,7 @@
     <meta name="description" content="Web Profile">
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,500" rel="stylesheet">
 
-    <link href="/app.css?id=1" rel="stylesheet">
+    <link href="/app.css?id=3" rel="stylesheet">
     <script>
         function makeRequest(method, url, data) {
             return new Promise(
@@ -55,12 +55,13 @@
         }
 
         var map;
-        var BASE_URL = 'https://api.covid19.arproject.web.id/';
-        // var BASE_URL = 'https://project-covid19-api.dev/';
+        // var BASE_URL = 'https://api.covid19.arproject.web.id/';
+        var BASE_URL = 'https://project-covid19-api.dev/';
 
         var marker = {};
         var infowindow = {};
         var caseCircle = {};
+        var baseSumber = 'nasional';
 
         function infoBox(controlDiv, map, kasusPositif, kasusSembuh, kasusMeninggal) {
             // We set up a variable for this since we're adding event listeners
@@ -72,7 +73,7 @@
             // Set CSS for the control border
             var infoBoxPositif = document.createElement('div');
             infoBoxPositif.id = 'infoBoxPositif';
-            infoBoxPositif.title = 'Jumlah kasus positif';
+            infoBoxPositif.title = 'Jumlah kasus positif tingkat nasional';
             controlDiv.appendChild(infoBoxPositif);
 
             // Set CSS for the control interior
@@ -84,7 +85,7 @@
             // Set CSS for the setCenter control border
             var infoBoxSembuh = document.createElement('div');
             infoBoxSembuh.id = 'infoBoxSembuh';
-            infoBoxSembuh.title = 'Jumlah kasus sembuh';
+            infoBoxSembuh.title = 'Jumlah kasus sembuh tingkat nasional';
             controlDiv.appendChild(infoBoxSembuh);
 
             // Set CSS for the control interior
@@ -96,7 +97,7 @@
             // Set CSS for the setCenter control border
             var infoBoxMeninggal = document.createElement('div');
             infoBoxMeninggal.id = 'infoBoxMeninggal';
-            infoBoxMeninggal.title = 'Jumlah kasus meninggal dunia';
+            infoBoxMeninggal.title = 'Jumlah kasus meninggal dunia tingkat nasional';
             controlDiv.appendChild(infoBoxMeninggal);
 
             // Set CSS for the control interior
@@ -132,12 +133,49 @@
             // Set CSS for the control interior
             var infoBoxCreatorText = document.createElement('div');
             infoBoxCreatorText.id = 'infoBoxCreatorText';
-            infoBoxCreatorText.innerHTML = 'Dibuat oleh Alfian Rikzandi';
+            infoBoxCreatorText.innerHTML = 'Dibuat oleh Alfian Rikzandi. Dataset/API di <a href="https://github.com/yanchespenda/covid19-indonesia-frontend" target="_blank" rel="nofolow">Github</a>';
             infoBoxCreator.appendChild(infoBoxCreatorText);
 
         }
-
         
+        function changeSumber(ev) {
+            var menuOdp = document.getElementById('menuOdp');
+            var menuPdp = document.getElementById('menuPdp');
+            var menuOdp2 = document.getElementById('menuOdp2');
+            var menuPdp2 = document.getElementById('menuPdp2');
+
+            if (baseSumber == 'nasional') {
+                baseSumber = 'provinsi';
+
+                toggleClass(menuOdp, 'unavailable');
+                toggleClass(menuPdp, 'unavailable');
+                toggleClass(menuOdp2, 'unavailable');
+                toggleClass(menuPdp2, 'unavailable');
+            } else {
+                baseSumber = 'nasional';
+
+                toggleClass(menuOdp, 'unavailable');
+                toggleClass(menuPdp, 'unavailable');
+                toggleClass(menuOdp2, 'unavailable');
+                toggleClass(menuPdp2, 'unavailable');
+            }
+        }
+
+        function toggleClass(element, className) {
+            if (!element || !className){
+                return;
+            }
+
+            var classString = element.className, nameIndex = classString.indexOf(className);
+            if (nameIndex == -1) {
+                classString += ' ' + className;
+            }
+            else {
+                classString = classString.substr(0, nameIndex) + classString.substr(nameIndex+className.length);
+            }
+            element.className = classString;
+        }
+
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 8,
@@ -292,6 +330,12 @@
                     }
                 ]
             });
+            
+            var getSwith = document.getElementById('sumberSwitch');
+            if (getSwith) {
+                getSwith.addEventListener('change', changeSumber);
+            }
+
             runData(99);
             runData(1);
         }
@@ -323,7 +367,11 @@
                 strokeWarna = '#FF5722';
                 dataNilai = 'pdp';
             }
-            var getDataRequest = makeRequest('GET', BASE_URL + url).then(function (res) {
+            var urlFix = BASE_URL + url;
+            if (id != 99) {
+                urlFix = BASE_URL + baseSumber + '/' + url;
+            }
+            var getDataRequest = makeRequest('GET', urlFix).then(function (res) {
                 if (res.status) {
                     if (id != 99) {
                         for (const key in res.data) {
@@ -377,6 +425,8 @@
                         map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(bottomControlDiv);
                     }
                 }
+            }).catch(function (err) {
+                console.log(err);
             });
         }
 
@@ -399,7 +449,15 @@
             resetData();
             runData(id);
         }
-        document.onreadystatechange = window.handleState;
+        
+
+        function openNav() {
+            document.getElementById("menuSidenav").style.width = "250px";
+        }
+
+        function closeNav() {
+            document.getElementById("menuSidenav").style.width = "0";
+        }
     </script>
     <script
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD4Oy4O9ZcM_K_2f8Ib7TRgSNum6-mcQuI&callback=initMap&language=id&region=ID"
@@ -410,25 +468,45 @@
     <main class="area-peta-container flex">
         <md-toolbar>
             <div class="md-toolbar-tools">
-                <a class="toolbar-link" href="javascript:;" onclick="gantiData(1)">
+                <a class="toolbar-button" href="javascript:;" onclick="openNav()">
+                    Menu
+                </a>
+                <a class="toolbar-link" id="menuPositif" href="javascript:;" onclick="gantiData(1)">
                     <span class="text">POSITIF</span>
                 </a>
-                <a class="toolbar-link" href="javascript:;" onclick="gantiData(2)">
+                <a class="toolbar-link" id="menuSembuh" href="javascript:;" onclick="gantiData(2)">
                     <span class="text">SEMBUH</span>
                 </a>
-                <a class="toolbar-link" href="javascript:;" onclick="gantiData(3)">
+                <a class="toolbar-link" id="menuMeninggal" href="javascript:;" onclick="gantiData(3)">
                     <span class="text">MENINGGAL</span>
                 </a>
-                <a class="toolbar-link" href="javascript:;" onclick="gantiData(4)">
+                <a class="toolbar-link unavailable" id="menuOdp" href="javascript:;" onclick="gantiData(4)">
                     <span class="text">ODP</span>
                 </a>
-                <a class="toolbar-link" href="javascript:;" onclick="gantiData(5)">
+                <a class="toolbar-link unavailable" id="menuPdp" href="javascript:;" onclick="gantiData(5)">
                     <span class="text">PDP</span>
                 </a>
+                <div class="flex"></div>
+                <div class="switch">
+                    <label>
+                        Nasional
+                        <input type="checkbox" id="sumberSwitch">
+                        <span class="lever"></span>
+                        Provinsi
+                    </label>
+                </div>
             </div>
         </md-toolbar>
         <div id="map"></div>
     </main>
+    <div id="menuSidenav" class="sidenav">
+        <a href="javascript:;" class="closebtn" onclick="closeNav()">&times;</a>
+        <a href="javascript:;">POSITIF</a>
+        <a href="javascript:;">SEMBUH</a>
+        <a href="javascript:;">MENINGGAL</a>
+        <a class="unavailable" id="menuOdp2" href="javascript:;">ODP</a>
+        <a class="unavailable" id="menuPdp2" href="javascript:;">PDP</a>
+    </div>
 </body>
 
 </html>
